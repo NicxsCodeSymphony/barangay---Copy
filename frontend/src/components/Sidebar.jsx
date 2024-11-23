@@ -68,7 +68,8 @@ const SideBar = ({ isOpen }) => {
             { path: '/admin/officials', icon: <FaUsers />, label: 'Officials' },
             { path: '/admin/residents', icon: <FaUser />, label: 'Residents' },
             { path: '/admin/households', icon: <FaBuilding />, label: 'Households' },
-            { path: '/admin/transaction', icon: <FaClipboardList />, label: 'Audit Logs' },
+            { path: '/admin/transaction', icon: <FaClipboardList />, label: 'Transaction' },
+            { path: '/admin/auditTrail', icon: <FaClipboardList />, label: 'Audit Logs' },
           ].map(({ path, icon, label }) => (
             <li className="mb-6" key={path}>
               <Link

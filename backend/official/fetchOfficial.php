@@ -2,6 +2,11 @@
 
 include "../connection.php";
 
+
+header("Access-Control-Allow-Origin: *"); // Allow any domain to access this API
+header("Access-Control-Allow-Methods: POST, OPTIONS"); // Allow POST and OPTIONS methods
+header("Access-Control-Allow-Headers: Content-Type"); // Allow the Content-Type header
+
 header('Content-Type: application/json');
 
 $query = "

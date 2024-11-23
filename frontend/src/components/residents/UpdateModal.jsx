@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const EditResidentModal = ({ isModalOpen, setIsModalOpen, resident, setResidents }) => {
+const EditResidentModal = ({ isModalOpen, setIsModalOpen, resident, setResidents, officialId}) => {
+
   const [formData, setFormData] = useState({
     id: "",
     first_name: "",
@@ -104,6 +105,11 @@ const EditResidentModal = ({ isModalOpen, setIsModalOpen, resident, setResidents
       );
 
       if (response.data.status === "success") {
+        await axios.post('http://localhost/barangay/backend/audit/add.php', {
+          action: 'Update Resident',
+          details: `Resident: ${formData.first_name} ${formData.last_name}`,
+          actor: officialId
+        })
         window.location.reload();
       } else {
         console.error(response.data.message);

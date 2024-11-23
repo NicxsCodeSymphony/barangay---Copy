@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { FaPlus } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import { FaPlus, FaCamera } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 import { saveAs } from "file-saver";
 
-const AddOfficialModal = ({ isModalOpen, setIsModalOpen }) => {
+const AddOfficialModal = ({ isModalOpen, setIsModalOpen, officialId }) => {
+
+
   const [newOfficials, setNewOfficials] = useState({
     first_name: "",
     middle_name: "",
@@ -35,6 +37,10 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen }) => {
   const [imagePreview, setImagePreview] = useState("");
   const [purokList, setPurokList] = useState([]);
   const [positions, setPositions] = useState([]);
+
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const videoRef = useRef(null);  // Reference to the video element
+  const canvasRef = useRef(null)
   const [officialList, setOfficialList] = useState(null);
   const [official_id, setOfficial_id] = useState(null);
 
@@ -152,14 +158,24 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen }) => {
       }
   
       formData.append("qr_code", qrCodeNumber);
-  
+
       const res = await axios.post(
         "http://localhost/barangay/backend/official/addOfficial.php",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
+      console.log("Response from backend:", res.data);
+      
   
       if (res.data.status === "success") {
+
+        const audit = await axios.post('http://localhost/barangay/backend/audit/add.php', {
+          actor: officialId,
+          action: 'Added new official',
+          details: `Official: ${newOfficials.first_name} ${newOfficials.last_name}`,
+          timestamp: new Date()
+        })
+
         setNewOfficials((prevState) => ({
           ...prevState,
           qr_code: qrCodeNumber.toString(),
@@ -195,12 +211,91 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen }) => {
     }
   };
 
+
+  useEffect(() => {
+    if (isCameraActive && videoRef.current) {
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          videoRef.current.srcObject = stream;
+        })
+        .catch((err) => {
+          toast.error("Error accessing the camera");
+          console.error(err);
+        });
+    }
+
+    // Cleanup: Stop the camera when the component is unmounted or when isCameraActive is false
+    return () => {
+      if (videoRef.current) {
+        const stream = videoRef.current.srcObject;
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach(track => track.stop());
+        }
+      }
+    };
+  }, [isCameraActive]);
+
+
+
+  const handleCameraStart = () => {
+    setIsCameraActive(true);
+  };
+
+  const handleCaptureImage = () => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL("image/png");
+    setImagePreview(imageData);  // Set image preview
+    
+    // Convert base64 to a File object
+    const file = dataURItoFile(imageData, 'captured_image.png');
+    setNewOfficials((prevState) => ({
+      ...prevState,
+      image: file,  // Save the File object to state
+    }));
+  
+    // Ensure the hidden file input exists
+    const fileInput = document.querySelector('#imageInput');
+    if (fileInput) {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      fileInput.files = dataTransfer.files;  // Assign the captured image to the input
+    } else {
+      console.error("File input element not found.");
+    }
+  
+    stopCamera(); // Stop the camera after capture
+  };
+  
+  const dataURItoFile = (dataURI, filename) => {
+    const byteString = atob(dataURI.split(',')[1]);
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new File([ab], filename, { type: mimeString });
+  };
+  
+  
+
+  const stopCamera = () => {
+    const stream = videoRef.current.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach((track) => track.stop());
+    setIsCameraActive(false);
+  };
+
   return (
     isModalOpen && (
       <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
         <div className="bg-white p-8 rounded-lg shadow-xl w-full sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/3 2xl:w-4/12">
           <h3 className="text-2xl font-semibold text-gray-700 mb-6">Add New Official</h3>
-
+  
           <div className="mb-6 flex justify-center">
             {imagePreview ? (
               <img
@@ -209,167 +304,46 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen }) => {
                 className="w-32 h-32 object-cover rounded-full border border-gray-300"
               />
             ) : (
-              <div className="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-                <FaPlus />
+              <div className="w-32 h-32 bg-gray-200 rounded-full flex justify-center items-center text-xl">
+                No Image
               </div>
             )}
           </div>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="mb-6 px-4 py-2 border rounded-md w-full"
-          />
-
+  
+          <div className="flex justify-between space-x-4 mb-6">
+            <button
+            
+              type="button"
+              onClick={handleCameraStart}
+              className="bg-blue-500 text-white p-2 rounded flex items-center"
+            >
+              <FaCamera className="mr-2" /> Use Camera
+            </button>
+            <input
+            id="imageInput"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="border p-2 rounded"
+            />
+          </div>
+  
+          {isCameraActive && (
+            <div className="mt-4 mb-6">
+              <video ref={videoRef} width="100%" height="auto" autoPlay />
+              <canvas ref={canvasRef} style={{ display: "none" }} width="640" height="480" />
+              <button
+                type="button"
+                onClick={handleCaptureImage}
+                className="bg-green-500 text-white p-2 mt-2 rounded"
+              >
+                Capture Image
+              </button>
+            </div>
+          )}
+  
           <form className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
-                type="text"
-                className="px-4 py-2 border rounded-md w-full"
-                placeholder="First Name"
-                value={newOfficials.first_name}
-                onChange={(e) => setNewOfficials({ ...newOfficials, first_name: e.target.value })}
-              />
-              <input
-                type="text"
-                className="px-4 py-2 border rounded-md w-full"
-                placeholder="Middle Name"
-                value={newOfficials.middle_name}
-                onChange={(e) => setNewOfficials({ ...newOfficials, middle_name: e.target.value })}
-              />
-              <input
-                type="text"
-                className="px-4 py-2 border rounded-md w-full"
-                placeholder="Last Name"
-                value={newOfficials.last_name}
-                onChange={(e) => setNewOfficials({ ...newOfficials, last_name: e.target.value })}
-              />
-              <input
-                type="text"
-                className="px-4 py-2 border rounded-md w-full"
-                placeholder="Suffix (optional)"
-                value={newOfficials.suffix}
-                onChange={(e) => setNewOfficials({ ...newOfficials, suffix: e.target.value })}
-              />
-            </div>
-
-            <input
-              type="text"
-              className="px-4 py-2 border rounded-md w-full"
-              placeholder="Email"
-              value={newOfficials.email}
-              onChange={(e) => setNewOfficials({ ...newOfficials, email: e.target.value })}
-            />
-            <input
-              type="password"
-              className="px-4 py-2 border rounded-md w-full"
-              placeholder="Password"
-              value={newOfficials.password}
-              onChange={(e) => setNewOfficials({ ...newOfficials, password: e.target.value })}
-            />
-            <div className="flex gap-4">
-              <select
-                className="px-4 py-2 border rounded-md w-full"
-                value={newOfficials.gender}
-                onChange={(e) => setNewOfficials({ ...newOfficials, gender: e.target.value })}
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
-              <input
-                type="date"
-                className="px-4 py-2 border rounded-md w-full"
-                value={newOfficials.birth_date}
-                onChange={handleBirthDateChange}
-              />
-            </div>
-
-            <input
-              type="text"
-              className="px-4 py-2 border rounded-md w-full"
-              placeholder="Birth Place"
-              value={newOfficials.birth_place}
-              onChange={(e) => setNewOfficials({ ...newOfficials, birth_place: e.target.value })}
-            />
-            <input
-              type="number"
-              className="px-4 py-2 border rounded-md w-full"
-              placeholder="Age"
-              value={newOfficials.age}
-              disabled
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <select
-                className="px-4 py-2 border rounded-md w-full"
-                value={newOfficials.civil_status}
-                onChange={(e) => setNewOfficials({ ...newOfficials, civil_status: e.target.value })}
-              >
-                <option value="">Select Civil Status</option>
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Widowed">Widowed</option>
-                <option value="Separated">Separated</option>
-              </select>
-              <input
-                type="text"
-                className="px-4 py-2 border rounded-md w-full"
-                placeholder="Nationality"
-                value={newOfficials.nationality}
-                onChange={(e) => setNewOfficials({ ...newOfficials, nationality: e.target.value })}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
-                type="text"
-                className="px-4 py-2 border rounded-md w-full"
-                placeholder="Religion"
-                value={newOfficials.religion}
-                onChange={(e) => setNewOfficials({ ...newOfficials, religion: e.target.value })}
-              />
-              <input
-                type="text"
-                className="px-4 py-2 border rounded-md w-full"
-                placeholder="Occupation"
-                value={newOfficials.occupation}
-                onChange={(e) => setNewOfficials({ ...newOfficials, occupation: e.target.value })}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
-                type="text"
-                className="px-4 py-2 border rounded-md w-full"
-                placeholder="Contact Number"
-                value={newOfficials.contact}
-                onChange={(e) => setNewOfficials({ ...newOfficials, contact: e.target.value })}
-              />
-              <select
-                className="px-4 py-2 border rounded-md w-full"
-                value={newOfficials.purok}
-                onChange={(e) => setNewOfficials({ ...newOfficials, purok: e.target.value })}
-              >
-                <option value="">Select Purok</option>
-                {purokList.map((purok, index) => (
-                  <option key={index} value={purok.purok_name}>
-                    {purok.purok_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
-                type="text"
-                className="px-4 py-2 border rounded-md w-full"
-                placeholder="Education"
-                value={newOfficials.education}
-                onChange={(e) => setNewOfficials({ ...newOfficials, education: e.target.value })}
-              />
-              <select
+          <select
                 className="px-4 py-2 border rounded-md w-full"
                 value={newOfficials.position}
                 onChange={handlePositionChange}
@@ -381,9 +355,183 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen }) => {
                   </option>
                 ))}
               </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="First Name"
+                  value={newOfficials.first_name}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, first_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Middle Name"
+                  value={newOfficials.middle_name}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, middle_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Last Name"
+                  value={newOfficials.last_name}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, last_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Suffix (optional)"
+                  value={newOfficials.suffix}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, suffix: e.target.value })}
+                />
+              </div>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Email"
+                  value={newOfficials.email}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, email: e.target.value })}
+                />
+              </div>
+              <div>
+                <input
+                  type="password"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Password"
+                  value={newOfficials.password}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, password: e.target.value })}
+                />
+              </div>
+            </div>
+  
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <select
+                  className="px-4 py-2 border rounded-md w-full"
+                  value={newOfficials.gender}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, gender: e.target.value })}
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div>
+                <input
+                  type="date"
+                  className="px-4 py-2 border rounded-md w-full"
+                  value={newOfficials.birth_date}
+                  onChange={handleBirthDateChange}
+                />
+              </div>
+            </div>
+  
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Birth Place"
+                  value={newOfficials.birth_place}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, birth_place: e.target.value })}
+                />
+              </div>
+              <div>
+                <input
+                  type="number"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Age"
+                  value={newOfficials.age}
+                  disabled
+                />
+              </div>
+            </div>
+  
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <select
+                  className="px-4 py-2 border rounded-md w-full"
+                  value={newOfficials.civil_status}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, civil_status: e.target.value })}
+                >
+                  <option value="">Select Civil Status</option>
+                  <option value="Single">Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Widowed">Widowed</option>
+                  <option value="Separated">Separated</option>
+                </select>
+              </div>
+              <div>
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Nationality"
+                  value={newOfficials.nationality}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, nationality: e.target.value })}
+                />
+              </div>
+            </div>
+  
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Religion"
+                  value={newOfficials.religion}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, religion: e.target.value })}
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Occupation"
+                  value={newOfficials.occupation}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, occupation: e.target.value })}
+                />
+              </div>
+            </div>
+  
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Contact Number"
+                  value={newOfficials.contact}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, contact: e.target.value })}
+                />
+              </div>
+              <div>
+                <select
+                  className="px-4 py-2 border rounded-md w-full"
+                  value={newOfficials.purok}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, purok: e.target.value })}
+                >
+                  <option value="">Select Purok</option>
+                  {purokList.map((purok, index) => (
+                    <option key={index} value={purok.purok_id}>
+                      {purok.purok_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+  
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -402,6 +550,8 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen }) => {
               </div>
             </div>
 
+            
+  
             <div className="mt-6 flex justify-between">
               <button
                 type="button"
@@ -423,6 +573,7 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen }) => {
       </div>
     )
   );
+  
 };
 
 export default AddOfficialModal;

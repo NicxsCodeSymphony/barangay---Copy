@@ -13,14 +13,20 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const Officials = () => {
   const [location, setLocation] = useState([14.5995, 120.9842]);
   const [officials, setOfficials] = useState([]);
+  const [loggedIn, setLoggedIn] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [selectedOfficial, setSelectedOfficial] = useState(null);
+  
 
   // Fetch officials data from API
   const fetchOfficials = async () => {
     try {
+      const token = localStorage.getItem('token')
+      setLoggedIn(token)
       const res = await axios.get('http://localhost/barangay/backend/official/fetchOfficial.php');
+      const official = await axios.get('http://localhost/barangay/backend/official/fetchOfficialById.php/?official_id=' + token)
+      setLoggedIn(official?.data)
       setOfficials(res.data);
     } catch (error) {
       console.error("Error fetching officials data", error);
@@ -82,7 +88,7 @@ const Officials = () => {
   return (
     <div className="h-screen bg-[#F4F1EC] py-7">
       <div className="px-6 sm:px-8 md:px-16 xl:px-10 2xl:px-32">
-        <h1 className="text-2xl font-bold mb-1 text-teal-600">Hello, Amanda!</h1>
+        <h1 className="text-2xl font-bold mb-1 text-teal-600">Hello, {loggedIn?.first_name}</h1>
         <p className="text-sm text-gray-500">Let's manage your barangay officials today</p>
 
         {/* Header & Add Official Button */}
@@ -92,7 +98,8 @@ const Officials = () => {
             <h1 className="text-2xl mt-2 font-bold">Officials Management</h1>
 
             <div className="2xl:h-[28vh] 2xl:w-[14vw] xl:h-[16vw] xl:w-[16vw] border rounded-[50%] absolute right-14">
-              <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Official" className="w-full h-full rounded-[50%]" />
+              {/* <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Official" className="w-full h-full rounded-[50%]" /> */}
+              <img src={`http://localhost/barangay/backend/official/${loggedIn?.image}`} alt="Official" className="w-full h-full rounded-[50%]" />
             </div>
 
             <div className="absolute bottom-5 left-8 w-full flex items-center gap-6">
@@ -177,6 +184,7 @@ const Officials = () => {
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
         handleAddOfficial={handleAddOfficial}
+        officialId={loggedIn?.official_id}
       />
 
       {/* Edit Official Modal */}
@@ -184,6 +192,7 @@ const Officials = () => {
         isModalOpen={isEdit}
         setIsModalOpen={setIsEdit}
         officialData={selectedOfficial}
+        officialId={loggedIn?.official_id}
       />
     </div>
   );

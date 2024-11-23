@@ -10,7 +10,8 @@ import Dashboard from "./admin/dashboard";
 import Officials from "./admin/official";
 import Residents from "./admin/resident";
 import Households from "./admin/household";
-import TransactionHistory from "./admin/audit";
+import TransactionHistory from "./admin/transaction";
+import Audit from "./admin/audit";
 
 const App = () => {
   const [auth, setAuth] = useState(false);
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="residents" element={auth ? <Residents /> : <Navigate to="/" />} />
           <Route path="households" element={auth ? <Households /> : <Navigate to="/" />} />
           <Route path="transaction" element={auth ? <TransactionHistory /> : <Navigate to="/" />} />
+          <Route path="auditTrail" element={auth ? <Audit /> : <Navigate to="/" />} />
         </Route>
       </Routes>
     </>

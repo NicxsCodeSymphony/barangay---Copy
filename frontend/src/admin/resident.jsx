@@ -21,12 +21,19 @@ const Residents = () => {
   const [error, setError] = useState(null);
   const [printModal, setPrintModal] = useState(false);
   const [addModal, setAddModal] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(null)
+
 
   // Fetch residents from the backend
   const fetchResidents = async () => {
     setLoading(true);
+    const token = localStorage.getItem('token')
     try {
+      const token = localStorage.getItem('token')
+      setLoggedIn(token)
       const res = await axios.get('http://localhost/barangay/backend/resident/fetch.php');
+      const official = await axios.get('http://localhost/barangay/backend/official/fetchOfficialById.php/?official_id=' + token)
+      setLoggedIn(official?.data)
       setResidents(res.data);
     } catch (err) {
       console.error("Error fetching residents:", err);
@@ -86,7 +93,7 @@ const Residents = () => {
   return (
     <div className="h-screen py-7 bg-[#F4F1EC]">
       <div className="px-6 sm:px-8 md:px-16 xl:px-10 2xl:px-32">
-        <h1 className="text-2xl font-bold mb-1 text-teal-600">Hello, Amanda!</h1>
+        <h1 className="text-2xl font-bold mb-1 text-teal-600">Hello, {loggedIn?.first_name}</h1>
         <p className="text-sm text-gray-500">Let's manage your barangay residents today</p>
 
         {/* Main Content Area */}
@@ -218,11 +225,13 @@ const Residents = () => {
         resident={selectedResident}
         isEditing={isEditing}
         setResidents={setResidents}
+         officialId={loggedIn?.official_id}
       />
 
       <AddResidentModal
         isModalOpen={addModal}
         setIsModalOpen={setAddModal}
+         officialId={loggedIn?.official_id}
       />
     </div>
   );

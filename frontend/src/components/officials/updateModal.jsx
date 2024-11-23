@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 
-const EditOfficialModal = ({ isModalOpen, setIsModalOpen, officialData }) => {
+const EditOfficialModal = ({ isModalOpen, setIsModalOpen, officialData, officialId }) => {
+
+  console.log(officialData?.first_name)
 
   const [formData, setFormData] = useState({
     id: 0,
@@ -84,6 +86,11 @@ const EditOfficialModal = ({ isModalOpen, setIsModalOpen, officialData }) => {
       const response = await axios.post('http://localhost/barangay/backend/official/updateOfficial.php', formDataToSend);
       if (response.data.status === "success") {
         toast.success(response.data);
+        const audit = await axios.post('http://localhost/barangay/backend/audit/add.php', {
+          actor: officialId,
+          action: "Updated Official",
+          details: `${officialData?.first_name} ${officialData?.last_name} was updated`,
+        })
         setIsModalOpen(false);
         window.location.href = "/admin/officials"
       } else {
