@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import PrintTemplateResidency from "./printTemplate/residency";
 import PrintTemplateCert from "./printTemplate/cert";
-// import IDTemplate from "./printTemplate/IDTemplate";
-// import ClearanceTemplate from "./printTemplate/ClearanceTemplate";
+import PrintTemplateIndigency from "./printTemplate/indegency";
+import PrintTemplateClearance from "./printTemplate/clearance";  // Import the Barangay Clearance Template
 
 const PrintModal = ({ isModalOpen, setIsModalOpen, resident }) => {
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -30,10 +30,10 @@ const PrintModal = ({ isModalOpen, setIsModalOpen, resident }) => {
         return <PrintTemplateResidency resident={resident} handleClose={handleClose} />;
       case "certificate":
         return <PrintTemplateCert resident={resident} handleClose={handleClose} />;
-      // case "id":
-      //   return <IDTemplate resident={resident} handleClose={handleClose} />;
-      // case "clearance":
-      //   return <ClearanceTemplate resident={resident} handleClose={handleClose} />;
+      case "indigency":
+        return <PrintTemplateIndigency resident={resident} handleClose={handleClose} />;
+      case "clearance":  // Add case for Barangay Clearance
+        return <PrintTemplateClearance resident={resident} handleClose={handleClose} />;
       default:
         return null;
     }
@@ -67,13 +67,13 @@ const PrintModal = ({ isModalOpen, setIsModalOpen, resident }) => {
                 Print Barangay Certificate
               </button>
               <button
-                onClick={() => setSelectedDocument("id")}
+                onClick={() => setSelectedDocument("indigency")}  // Add Indigency option
                 className="block w-full mt-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
               >
-                Print Barangay ID
+                Print Barangay Indigency Certificate
               </button>
               <button
-                onClick={() => setSelectedDocument("clearance")}
+                onClick={() => setSelectedDocument("clearance")}  // Add Clearance option
                 className="block w-full mt-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
               >
                 Print Barangay Clearance
@@ -89,8 +89,8 @@ const PrintModal = ({ isModalOpen, setIsModalOpen, resident }) => {
                   ? "Barangay Residency"
                   : selectedDocument === "certificate"
                   ? "Barangay Certificate"
-                  : selectedDocument === "id"
-                  ? "Barangay ID"
+                  : selectedDocument === "indigency"
+                  ? "Barangay Indigency Certificate"
                   : "Barangay Clearance"}
               </p>
 
@@ -102,8 +102,8 @@ const PrintModal = ({ isModalOpen, setIsModalOpen, resident }) => {
                   ? "Barangay Residency"
                   : selectedDocument === "certificate"
                   ? "Barangay Certificate"
-                  : selectedDocument === "id"
-                  ? "Barangay ID"
+                  : selectedDocument === "indigency"
+                  ? "Barangay Indigency Certificate"
                   : "Barangay Clearance"}
               </button>
             </div>

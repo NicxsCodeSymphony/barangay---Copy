@@ -10,7 +10,18 @@ const Households = () => {
   const [selectedHousehold, setSelectedHousehold] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [lastNames, setLastNames] = useState([]); // New state for storing unique last names
+  const [lastNames, setLastNames] = useState([]); 
+        
+  const fetchToken = () => {
+    const token = localStorage.getItem('token');
+    if(!token){
+        window.location.href = '/login'
+    }
+}
+
+useEffect(() => {
+    fetchToken();
+}, [households]);
 
   const fetchHouseholds = async () => {
     try {

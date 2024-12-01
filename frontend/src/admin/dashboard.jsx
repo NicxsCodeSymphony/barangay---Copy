@@ -25,11 +25,29 @@ const Dashboard = () => {
   const [isAddPurokModalOpen, setIsAddPurokModalOpen] = useState(false); 
   const [isHouseHold, setIsHouseHold] = useState(false);
 
+  const [totalPopulation, setTotalPopulation] = useState(null)
+
+  
+  const fetchToken = () => {
+    const token = localStorage.getItem('token');
+    if(!token){
+        window.location.href = '/login'
+    }
+}
+
+useEffect(() => {
+    fetchToken();
+}, [totalPopulation]);
+
 
   const fetchOfficials = async () => {
     try{
       const res = await axios.get('http://localhost/barangay/backend/official/fetchOfficial.php')
       const resident = await axios.get('http://localhost/barangay/backend/resident/fetch.php')
+
+      const totalPop = await axios.get('http://localhost/barangay/backend/barangay/totalPopulation.php')
+      setTotalPopulation(totalPop.data?.total)
+
       setResidentData(resident.data)
       setResidents(resident.data)
       setOfficials(res.data)
@@ -104,7 +122,7 @@ const Dashboard = () => {
   return (
     <div className="h-screen py-7 bg-[#F4F1EC]">
       <div className="px-6 sm:px-8 md:px-16 xl:px-10 2xl:px-32">
-        <h1 className="text-2xl font-bold mb-1">Hi, Amanda!</h1>
+        <h1 className="text-2xl font-bold mb-1">Hello there!</h1>
         <p className="text-sm">Let's take a look at your activity today</p>
 
         <div className="flex flex-col sm:flex-row justify-between w-full gap-10 h-[40vh] mt-7">
@@ -190,10 +208,10 @@ const Dashboard = () => {
 
             <div className="bg-white h-1/2 rounded-xl px-4 py-6 relative flex items-center">
               <div className="absolute left-5 text-3xl font-semibold">
-                <span>{officials.length}</span>
+                <span>{totalPopulation}</span>
               </div>
 
-              <div className="absolute top-5 left-5 text-sm sm:text-lg font-semibold">Officials</div>
+              <div className="absolute top-5 left-5 text-sm sm:text-lg font-semibold">Total Population</div>
 
               <div className="flex justify-center items-center absolute right-5">
                 <Pie
@@ -204,7 +222,7 @@ const Dashboard = () => {
               </div>
 
               <div className="absolute bottom-5 left-5 text-xs text-gray-500 italic">
-                Total Officials
+                Total Population
               </div>
             </div>
           </div>

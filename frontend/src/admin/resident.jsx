@@ -21,12 +21,30 @@ const Residents = () => {
   const [error, setError] = useState(null);
   const [printModal, setPrintModal] = useState(false);
   const [addModal, setAddModal] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(null)
 
-  // Fetch residents from the backend
+  const fetchToken = () => {
+    const token = localStorage.getItem('token');
+    if(!token){
+        window.location.href = '/login'
+    }
+}
+
+useEffect(() => {
+    fetchToken();
+}, [residents]);
+
+
   const fetchResidents = async () => {
     setLoading(true);
+    const token = localStorage.getItem('token')
     try {
+      const token = localStorage.getItem('token')
+      setLoggedIn(token)
       const res = await axios.get('http://localhost/barangay/backend/resident/fetch.php');
+      const official = await axios.get('http://localhost/barangay/backend/official/fetchOfficialById.php/?official_id=' + token)
+      console.log(official?.data)
+      setLoggedIn(official?.data)
       setResidents(res.data);
     } catch (err) {
       console.error("Error fetching residents:", err);
@@ -86,22 +104,19 @@ const Residents = () => {
   return (
     <div className="h-screen py-7 bg-[#F4F1EC]">
       <div className="px-6 sm:px-8 md:px-16 xl:px-10 2xl:px-32">
-        <h1 className="text-2xl font-bold mb-1 text-teal-600">Hello, Amanda!</h1>
+        <h1 className="text-2xl font-bold mb-1 text-teal-600">Hello, {loggedIn?.first_name}</h1>
         <p className="text-sm text-gray-500">Let's manage your barangay residents today</p>
 
-        {/* Main Content Area */}
         <div className="flex flex-col sm:flex-row justify-between w-full gap-10 h-[40vh] mt-7">
-          {/* Resident Info Section */}
           <div className="bg-[#CFC6B5] w-full sm:w-3/4 h-full rounded-2xl py-6 px-8 relative shadow-lg transform transition-all duration-300 hover:scale-105">
             <h3 className="text-xs text-slate-700">Manage Barangay Residents</h3>
             <h1 className="text-2xl mt-2 font-bold">{selectedResident ? `${selectedResident.first_name} ${selectedResident.last_name}` : "Manage Barangay Residents"}</h1>
             <p className="mt-10">{selectedResident ? `Purok: ${selectedResident.purok_name}` : ""}</p>
             <p className="mt-2">{selectedResident ? `Age: ${selectedResident.age} years old` : ""}</p>
 
-            {/* Resident Profile Image */}
             <div className="absolute top-12 right-10 w-[200px] h-[200px] sm:w-[200px] sm:h-[200px] border-4 border-white rounded-full overflow-hidden shadow-lg">
               <img
-                src={selectedResident ? `http://localhost/barangay/backend/resident/${selectedResident.image}` : "https://randomuser.me/api/portraits/men/1.jpg"}
+                src={selectedResident ? `http://localhost/barangay/backend/resident/${selectedResident.image}` : `http://localhost/barangay/backend/official/${loggedIn?.image}`}
                 alt="Resident Profile"
                 className="w-full h-full object-cover"
               />
@@ -218,11 +233,13 @@ const Residents = () => {
         resident={selectedResident}
         isEditing={isEditing}
         setResidents={setResidents}
+         officialId={loggedIn?.official_id}
       />
 
       <AddResidentModal
         isModalOpen={addModal}
         setIsModalOpen={setAddModal}
+         officialId={loggedIn?.official_id}
       />
     </div>
   );

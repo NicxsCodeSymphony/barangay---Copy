@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -8,6 +8,17 @@ const Login = () => {
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const fetchToken = () => {
+        const token = localStorage.getItem('token');
+        if(token){
+            window.location.href = '/admin/dashboard'
+        }
+    }
+
+    useEffect(() => {
+        fetchToken();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
