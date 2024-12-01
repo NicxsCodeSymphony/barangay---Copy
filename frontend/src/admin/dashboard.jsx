@@ -24,6 +24,7 @@ const Dashboard = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);  
   const [isAddPurokModalOpen, setIsAddPurokModalOpen] = useState(false); 
   const [isHouseHold, setIsHouseHold] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(null);
 
   const [totalPopulation, setTotalPopulation] = useState(null)
 
@@ -42,12 +43,18 @@ useEffect(() => {
 
   const fetchOfficials = async () => {
     try{
+      const token = localStorage.getItem('token')
       const res = await axios.get('http://localhost/barangay/backend/official/fetchOfficial.php')
       const resident = await axios.get('http://localhost/barangay/backend/resident/fetch.php')
+<<<<<<< HEAD
 
       const totalPop = await axios.get('http://localhost/barangay/backend/barangay/totalPopulation.php')
       setTotalPopulation(totalPop.data?.total)
 
+=======
+      const official = await axios.get('http://localhost/barangay/backend/official/fetchOfficialById.php/?official_id=' + token)
+      setLoggedIn(official?.data)
+>>>>>>> 140ef3a258009c0fe90cb4cd7d39ff4b7801ee0a
       setResidentData(resident.data)
       setResidents(resident.data)
       setOfficials(res.data)
@@ -122,7 +129,11 @@ useEffect(() => {
   return (
     <div className="h-screen py-7 bg-[#F4F1EC]">
       <div className="px-6 sm:px-8 md:px-16 xl:px-10 2xl:px-32">
+<<<<<<< HEAD
         <h1 className="text-2xl font-bold mb-1">Hello there!</h1>
+=======
+        <h1 className="text-2xl font-bold mb-1">Hi, {loggedIn?.first_name}</h1>
+>>>>>>> 140ef3a258009c0fe90cb4cd7d39ff4b7801ee0a
         <p className="text-sm">Let's take a look at your activity today</p>
 
         <div className="flex flex-col sm:flex-row justify-between w-full gap-10 h-[40vh] mt-7">

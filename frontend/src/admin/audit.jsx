@@ -7,6 +7,7 @@ const Audit = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+<<<<<<< HEAD
   const fetchToken = () => {
     const token = localStorage.getItem('token');
     if(!token){
@@ -19,6 +20,9 @@ useEffect(() => {
 }, [auditLogs]);
 
 
+=======
+  // Fetch data from the API
+>>>>>>> 140ef3a258009c0fe90cb4cd7d39ff4b7801ee0a
   useEffect(() => {
     const fetchAuditData = async () => {
       try {

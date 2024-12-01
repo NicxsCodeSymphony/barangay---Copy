@@ -6,6 +6,7 @@ const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
+<<<<<<< HEAD
   const fetchToken = () => {
     const token = localStorage.getItem('token');
     if(!token){
@@ -17,6 +18,8 @@ useEffect(() => {
     fetchToken();
 }, [transactions]);
 
+=======
+>>>>>>> 140ef3a258009c0fe90cb4cd7d39ff4b7801ee0a
   const fetchTransactions = async () => {
     try {
       const response = await axios.get("http://localhost/barangay/backend/transaction/fetch.php");

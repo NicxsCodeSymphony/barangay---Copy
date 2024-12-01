@@ -17,6 +17,7 @@ const Officials = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [selectedOfficial, setSelectedOfficial] = useState(null);
+  
 
   const fetchToken = () => {
     const token = localStorage.getItem('token');

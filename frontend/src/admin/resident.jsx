@@ -23,6 +23,7 @@ const Residents = () => {
   const [addModal, setAddModal] = useState(false);
   const [loggedIn, setLoggedIn] = useState(null)
 
+<<<<<<< HEAD
   const fetchToken = () => {
     const token = localStorage.getItem('token');
     if(!token){
@@ -34,6 +35,8 @@ useEffect(() => {
     fetchToken();
 }, [residents]);
 
+=======
+>>>>>>> 140ef3a258009c0fe90cb4cd7d39ff4b7801ee0a
 
   const fetchResidents = async () => {
     setLoading(true);
@@ -43,7 +46,10 @@ useEffect(() => {
       setLoggedIn(token)
       const res = await axios.get('http://localhost/barangay/backend/resident/fetch.php');
       const official = await axios.get('http://localhost/barangay/backend/official/fetchOfficialById.php/?official_id=' + token)
+<<<<<<< HEAD
       console.log(official?.data)
+=======
+>>>>>>> 140ef3a258009c0fe90cb4cd7d39ff4b7801ee0a
       setLoggedIn(official?.data)
       setResidents(res.data);
     } catch (err) {

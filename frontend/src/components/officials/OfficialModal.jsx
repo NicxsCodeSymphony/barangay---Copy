@@ -474,6 +474,7 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen, officialId }) => {
                 </select>
               </div>
               <div>
+<<<<<<< HEAD
               <select
                   className="px-4 py-2 border rounded-md w-full"
                   value={newOfficials.nationality}
@@ -486,11 +487,21 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen, officialId }) => {
                   <option value="British">British</option>
                   <option value="Japanese">Japanese</option>
                 </select>
+=======
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Nationality"
+                  value={newOfficials.nationality}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, nationality: e.target.value })}
+                />
+>>>>>>> 140ef3a258009c0fe90cb4cd7d39ff4b7801ee0a
               </div>
             </div>
   
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
+<<<<<<< HEAD
               <select
                   className="px-4 py-2 border rounded-md w-full"
                   value={newOfficials.religion}
@@ -501,6 +512,15 @@ const AddOfficialModal = ({ isModalOpen, setIsModalOpen, officialId }) => {
                   <option value="Born Again">Born Again</option>
                   <option value="Baptist">Baptist</option>
                 </select>
+=======
+                <input
+                  type="text"
+                  className="px-4 py-2 border rounded-md w-full"
+                  placeholder="Religion"
+                  value={newOfficials.religion}
+                  onChange={(e) => setNewOfficials({ ...newOfficials, religion: e.target.value })}
+                />
+>>>>>>> 140ef3a258009c0fe90cb4cd7d39ff4b7801ee0a
               </div>
               <div>
                 <input
